@@ -2,7 +2,6 @@ using System.Data;
 using System.Data.SqlClient;
 using Newtonsoft.Json;
 using System.Net;
-using Microsoft.Extensions.Configuration;
 
 namespace web_api_me
 {
@@ -15,6 +14,80 @@ namespace web_api_me
             var configuation = GetConfiguration();
             stringConnection = configuation.GetSection("AppSettings").GetSection("DbConnection").Value;
             MConn = new SqlConnection(stringConnection);
+            /*try
+            {
+                MConn.Open();
+            }
+            catch (Exception)
+            {
+                throw new Exception("DB");
+            }
+            finally
+            {
+                MConn.Close();
+            }*/
+        }
+
+        static System.Text.Encoding ISO_8859_1_ENCODING = System.Text.Encoding.GetEncoding("ISO-8859-1");
+        public (string, string) GetUsernameAndPasswordFromAuthorizeHeader(string authorizeHeader)
+        {
+            if (authorizeHeader == null || !authorizeHeader.Contains("Basic "))
+                return (null, null);
+
+            string encodedUsernamePassword = authorizeHeader.Substring("Basic ".Length).Trim();
+            string usernamePassword = ISO_8859_1_ENCODING.GetString(Convert.FromBase64String(encodedUsernamePassword));
+
+            string username = usernamePassword.Split(':')[0];
+            string password = usernamePassword.Split(':')[1];
+
+            return (username, password);
+        }
+
+        public bool isAuthorize(string authorizeHeader)
+        {
+            try
+            {
+                (string userid, string pass) = GetUsernameAndPasswordFromAuthorizeHeader(authorizeHeader);
+                if (userid == null || pass == null)
+                    return false;
+                if (IsPassMatchUser(userid, pass))
+                    return true;
+                return false;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public bool IsPassMatchUser(string userId, string pass)
+        {
+            try
+            {
+                int UserId = int.Parse(userId);
+                if (UserId == 0)
+                    return false;
+                if (!IsUserIdExists(UserId))
+                    return false;
+                if (pass == "")
+                    return false;
+                if (pass.Length > 20)
+                    return false;
+                SqlCommand command = new SqlCommand("select 1 from USERS where USER_ID = @userId and PASSWORD = @pass");
+                command.Parameters.Add("@userId", SqlDbType.Int);
+                command.Parameters["@userId"].Value = UserId;
+                command.Parameters.Add("@pass", SqlDbType.NVarChar);
+                command.Parameters["@pass"].Value = pass;
+                DataTable dt = GetRawData(command);
+                if (dt.Rows.Count > 0)
+                    return true;
+                return false;
+            }
+            catch (Exception e)
+            {
+                Insert2ErrorTable("MPB.IsPassMatchUser", e.Message, 0);
+                throw e;
+            }
         }
 
         public IConfigurationRoot GetConfiguration()
@@ -77,7 +150,7 @@ namespace web_api_me
             catch (Exception e)
             {
                 Insert2ErrorTable("MPB.GetRawData", e.Message, 0);
-                return new DataTable();
+                throw e;
             }
 }
 
@@ -97,7 +170,7 @@ namespace web_api_me
             {
                 MConn.Close();
                 Insert2ErrorTable("MPB.EditData", e.Message, 0);
-                return -1;
+                throw e;
             }
 }
 
@@ -116,36 +189,7 @@ namespace web_api_me
             catch (Exception e)
             {
                 Insert2ErrorTable("MPB.IsUserIdExists", e.Message, userId);
-                return false;
-            }
-        }
-
-        protected bool IsPassMatchUser(int userId, string pass)
-        {
-            try
-            {
-                if (userId == 0)
-                    return false;
-                if (!IsUserIdExists(userId))
-                    return false;
-                if (pass == null)
-                    return false;
-                if (pass.Length > 20)
-                    return false;
-                SqlCommand command = new SqlCommand("select 1 from USERS where USER_ID = @userId and PASSWORD = @pass");
-                command.Parameters.Add("@userId", SqlDbType.Int);
-                command.Parameters["@userId"].Value = userId;
-                command.Parameters.Add("@pass", SqlDbType.NVarChar);
-                command.Parameters["@pass"].Value = pass;
-                DataTable dt = GetRawData(command);
-                if (dt.Rows.Count > 0)
-                    return true;
-                return false;
-            }
-            catch (Exception e)
-            {
-                Insert2ErrorTable("MPB.IsPassMatchUser", e.Message, userId);
-                return false;
+                throw e;
             }
         }
 
@@ -153,6 +197,10 @@ namespace web_api_me
         {
             try
             {
+                if (error.Contains("The server was not found or was not accessible"))
+                {
+                    return;
+                }
                 SqlCommand command = new SqlCommand("insert into ERRORS (DATE_TIME,FUNCTION_NAME,ERROR,USER_ID) values (GETDATE(),@FunctionName,@Error,@UserId)");
                 command.Parameters.Add("@FunctionName", SqlDbType.NVarChar);
                 command.Parameters["@FunctionName"].Value = functionName;

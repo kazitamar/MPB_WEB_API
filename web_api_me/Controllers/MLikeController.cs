@@ -14,13 +14,12 @@ namespace web_api_me.Controllers
         {
             try
             {
-                var mLike = new MLike {UserId = userId, PostId = postId };
+                var mLike = new MLike { UserId = userId, PostId = postId };
                 string msg = "";
                 if (mLike.IsValidForInsert(ref msg))
                     return mLike.CreateHttpResponseMessage(mLike.InsertLike());
                 else
-                    return new HttpResponseMessage(HttpStatusCode.InternalServerError) {ReasonPhrase = msg};
-                
+                    return new HttpResponseMessage(HttpStatusCode.InternalServerError) { ReasonPhrase = (msg != "" ? msg : "General error") };
             }
             catch (Exception e)
             {
@@ -40,7 +39,7 @@ namespace web_api_me.Controllers
                 if (mLike.IsValidForDelete(ref msg))
                     return mLike.CreateHttpResponseMessage(mLike.Deletelike());
                 else
-                    return new HttpResponseMessage(HttpStatusCode.InternalServerError) { ReasonPhrase = msg };
+                    return new HttpResponseMessage(HttpStatusCode.InternalServerError) { ReasonPhrase = (msg != "" ? msg : "General error") };
             }
             catch (Exception e)
             {

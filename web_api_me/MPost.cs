@@ -201,7 +201,7 @@ namespace web_api_me
             catch (Exception e)
             {
                 Insert2ErrorTable("MPost.SelectUserIdByPostId", e.Message, UserId);
-                return 0;
+                throw e;
             }
         }
 

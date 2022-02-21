@@ -120,7 +120,7 @@ namespace web_api_me
             catch (Exception e)
             {
                 Insert2ErrorTable("MLike.IsPostIdExists", e.Message, UserId);
-                return false;
+                throw e;
             }
         }
 

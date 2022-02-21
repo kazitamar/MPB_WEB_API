@@ -36,7 +36,7 @@ namespace web_api_me.Controllers
                 if (mPost.IsValidForInsert(ref msg))
                     return mPost.CreateHttpResponseMessage(mPost.InsertPost());
                 else
-                    return new HttpResponseMessage(HttpStatusCode.InternalServerError) { ReasonPhrase = msg };
+                    return new HttpResponseMessage(HttpStatusCode.InternalServerError) { ReasonPhrase = (msg != "" ? msg : "General error") };
             }
             catch (Exception e)
             {
@@ -56,7 +56,7 @@ namespace web_api_me.Controllers
                 if (mPost.IsValidForDelete(ref msg))
                     return mPost.CreateHttpResponseMessage(mPost.DeletePost());
                 else
-                    return new HttpResponseMessage(HttpStatusCode.InternalServerError) { ReasonPhrase = msg };
+                    return new HttpResponseMessage(HttpStatusCode.InternalServerError) { ReasonPhrase = (msg != "" ? msg : "General error") };
             }
             catch (Exception e)
             {
@@ -76,7 +76,7 @@ namespace web_api_me.Controllers
                 if (mPost.IsValidForUpdate(ref msg))
                     return mPost.CreateHttpResponseMessage(mPost.EditPost());
                 else
-                    return new HttpResponseMessage(HttpStatusCode.InternalServerError) { ReasonPhrase = msg };
+                    return new HttpResponseMessage(HttpStatusCode.InternalServerError) { ReasonPhrase = (msg != "" ? msg : "General error") };
             }
             catch (Exception e)
             {
