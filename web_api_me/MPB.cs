@@ -95,6 +95,7 @@ namespace web_api_me
             var builder = new ConfigurationBuilder().SetBasePath(Directory.GetCurrentDirectory()).AddJsonFile("appsettings.json", optional: true, reloadOnChange: true);
             return builder.Build();
         }
+
         private bool IsValidSql(string sqlCommand)
         {
             try

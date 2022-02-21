@@ -1,7 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using System.Net;
-
 
 namespace web_api_me.Controllers
 {
@@ -10,11 +8,13 @@ namespace web_api_me.Controllers
     public class MLikeController : ControllerBase
     {
         [HttpPost(Name = "PostMLike")]
-        public HttpResponseMessage Post(int userId, int postId)
+        public HttpResponseMessage Post([FromHeader] string Authorization, int userId, int postId)
         {
             try
             {
                 var mLike = new MLike { UserId = userId, PostId = postId };
+                if (!mLike.isAuthorize(Authorization))
+                    return new HttpResponseMessage(HttpStatusCode.Unauthorized);
                 string msg = "";
                 if (mLike.IsValidForInsert(ref msg))
                     return mLike.CreateHttpResponseMessage(mLike.InsertLike());
@@ -30,11 +30,13 @@ namespace web_api_me.Controllers
         }
 
         [HttpDelete(Name = "DeleteMLike")]
-        public HttpResponseMessage Delete(int userId, int postId)
+        public HttpResponseMessage Delete([FromHeader] string Authorization, int userId, int postId)
         {
             try
             {
                 var mLike = new MLike { UserId = userId, PostId = postId };
+                if (!mLike.isAuthorize(Authorization))
+                    return new HttpResponseMessage(HttpStatusCode.Unauthorized);
                 string msg = "";
                 if (mLike.IsValidForDelete(ref msg))
                     return mLike.CreateHttpResponseMessage(mLike.Deletelike());

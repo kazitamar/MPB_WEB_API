@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using System.Net;
 
 namespace web_api_me.Controllers
@@ -9,13 +8,14 @@ namespace web_api_me.Controllers
 
     public class MPostController : ControllerBase
     {
-
         [HttpGet(Name = "GetMPost")]
-        public HttpResponseMessage Get(int postId)
+        public HttpResponseMessage Get([FromHeader] string Authorization, int postId)
         {
             try
             {
                 var mPost = new MPost { PostId = postId };
+                if (!mPost.isAuthorize(Authorization))
+                    return new HttpResponseMessage(HttpStatusCode.Unauthorized);
                 return mPost.CreateHttpResponseMessage(mPost.SelectPost());
             }
             catch (Exception e)
@@ -27,11 +27,13 @@ namespace web_api_me.Controllers
         }
 
         [HttpPost(Name = "PostMPost")]
-        public HttpResponseMessage Post(int userId, string? PostContent, string? title)
+        public HttpResponseMessage Post([FromHeader] string Authorization, int userId, string? PostContent, string? title)
         {
             try
             {
                 var mPost = new MPost { UserId = userId, PostContent = PostContent, Title = title };
+                if (!mPost.isAuthorize(Authorization))
+                    return new HttpResponseMessage(HttpStatusCode.Unauthorized); 
                 string msg = "";
                 if (mPost.IsValidForInsert(ref msg))
                     return mPost.CreateHttpResponseMessage(mPost.InsertPost());
@@ -47,11 +49,13 @@ namespace web_api_me.Controllers
         }
 
         [HttpDelete(Name = "DeleteMPost")]
-        public HttpResponseMessage Delete(int userId, int PostId)
+        public HttpResponseMessage Delete([FromHeader] string Authorization, int userId, int PostId)
         {
             try
             {
                 var mPost = new MPost { UserId = userId, PostId = PostId };
+                if (!mPost.isAuthorize(Authorization))
+                    return new HttpResponseMessage(HttpStatusCode.Unauthorized);
                 string msg = "";
                 if (mPost.IsValidForDelete(ref msg))
                     return mPost.CreateHttpResponseMessage(mPost.DeletePost());
@@ -67,11 +71,13 @@ namespace web_api_me.Controllers
         }
 
         [HttpPut(Name = "PutMPost")]
-        public HttpResponseMessage Put(int userId, int postId, string? PostContent, string? title)
+        public HttpResponseMessage Put([FromHeader] string Authorization, int userId, int postId, string? PostContent, string? title)
         {
             try
             {
                 var mPost = new MPost { PostId = postId, UserId = userId, PostContent = PostContent, Title = title };
+                if (!mPost.isAuthorize(Authorization))
+                    return new HttpResponseMessage(HttpStatusCode.Unauthorized);
                 string msg = "";
                 if (mPost.IsValidForUpdate(ref msg))
                     return mPost.CreateHttpResponseMessage(mPost.EditPost());
